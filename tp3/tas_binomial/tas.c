@@ -1,9 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<malloc.h> 
 #include "tas.h"
 
 
-#define COMPARE(a, b) ((a) <= (b))
+
 
 static const unsigned int base_capacity = 1000000;
 
@@ -11,169 +12,367 @@ static const unsigned int base_capacity = 1000000;
 
 
 
-tasbinaire_t * tasbinaire_create(){
+struct node* MAKE_bin_HEAP() {
 
-  tasbinaire_t * tas = (tasbinaire_t *) malloc( sizeof(tasbinaire_t) );
+    struct node* bh;
 
-  tas->data =  malloc( sizeof(int) * base_capacity );
+    bh = NULL;     
 
-  tas->capacity = base_capacity;
-
-  tas->count = 0;
-
-  return tas;
+    return bh;
 
 }
 
-void entasser_bas_haus(tasbinaire_t *h,int index){
-    int temp;
-    int parent_node = index/2;
+ 
+struct node * H = NULL;
 
-    if(h->data[parent_node] > h->data[index]){
-        //echanger et appel recurssive
-        temp = h->data[parent_node];
-        h->data[parent_node] = h->data[index];
-        h->data[index] = temp;
-        entasser_bas_haus(h,parent_node);
-    }
+struct node *Hr = NULL;
+
+int bin_LINK(struct node* y, struct node* z) {
+
+    y->parent = z;
+
+    y->sibling = z->child;
+
+    z->child = y;
+
+    z->degree = z->degree + 1;
+
 }
 
+ 
 
-void insert(tasbinaire_t *h, int valeur){
-        if( h->count < h->capacity){
-                h->data[h->count] = valeur;
-                entasser_bas_haus(h, h->count);
-                h->count++;
+struct node* CREATE_NODE(int k) {
+
+    struct node* p;//new node;
+
+    p = (struct node*) malloc(sizeof(struct node));
+
+    p->n = k;
+    
+    p->capacity = base_capacity;
+     
+    p->count = 1;
+
+    return p;
+
+}
+
+ 
+
+struct node* bin_HEAP_UNION(struct node* H1, struct node* H2) {
+
+    struct node* prev_x;
+
+    struct node* next_x;
+
+    struct node* x;
+
+    struct node* H = MAKE_bin_HEAP();
+
+    H = bin_HEAP_MERGE(H1, H2);
+
+    if (H == NULL)
+
+        return H;
+
+    prev_x = NULL;
+
+    x = H;
+
+    next_x = x->sibling;
+
+    while (next_x != NULL) {
+
+        if ((x->degree != next_x->degree) || ((next_x->sibling != NULL)
+
+                && (next_x->sibling)->degree == x->degree)) {
+
+            prev_x = x;
+
+            x = next_x;
+
+        } else {
+
+            if (x->n <= next_x->n) {
+
+                x->sibling = next_x->sibling;
+
+                bin_LINK(next_x, x);
+
+            } else {
+
+                if (prev_x == NULL)
+
+                    H = next_x;
+
+                else
+
+                    prev_x->sibling = next_x;
+
+                bin_LINK(x, next_x);
+
+                x = next_x;
 
             }
-        else{
 
-                printf("Erreur: tas plein\n");
-                exit(0);
         }
-        
-}
-tasbinaire_t * show( tasbinaire_t *h ){
 
-        unsigned int i;
-        for(i=0; i <= h->count -1 ; i++){
-                printf("[%d]",h->data[i]);
-        }
-        printf("\n");
+        next_x = x->sibling;
+
+    }
+    
+    H->count = H1->count + H2->count;
+    return H;
 
 }
 
+ 
 
+struct node* bin_HEAP_INSERT(struct node* H, struct node* x) {
 
+    struct node* H1 = MAKE_bin_HEAP();
 
+    x->parent = NULL;
 
+    x->child = NULL;
 
+    x->sibling = NULL;
 
-void entasser_haus_bas(tasbinaire_t *h, int parent_node){
-    int left = parent_node*2+1;
-    int right = parent_node*2+2;
+    x->degree = 0;
+
+    H1 = x;
+
+    H = bin_HEAP_UNION(H, H1);
+
+    return H;
+
+}
+
+ 
+
+struct node* bin_HEAP_MERGE(struct node* H1, struct node* H2) {
+
+    struct node* H = MAKE_bin_HEAP();
+
+    struct node* y;
+
+    struct node* z;
+
+    struct node* a;
+
+    struct node* b;
+
+    y = H1;
+
+    z = H2;
+
+    if (y != NULL) {
+
+        if (z != NULL && y->degree <= z->degree)
+
+            H = y;
+
+        else if (z != NULL && y->degree > z->degree)
+
+            H = z;
+
+        else
+
+            H = y;
+
+    } else
+
+        H = z;
+
+    while (y != NULL && z != NULL) {
+
+        if (y->degree < z->degree) {
+
+            y = y->sibling;
+
+        } else if (y->degree == z->degree) {
+
+            a = y->sibling;
+
+            y->sibling = z;
+
+            y = a;
+
+        } else {
+
+            b = z->sibling;
+
+            z->sibling = y;
+
+            z = b;
+
+        }
+
+    }
+
+    return H;
+
+}
+
+ 
+
+int DISPLAY(struct node* H) {
+
+    struct node* p;
+
+    if (H == NULL) {
+
+        printf("\nHEAP EMPTY");
+
+        return 0;
+
+    }
+
+    printf("\nTHE ROOT NODES ARE:-\n");
+
+    p = H;
+
+    while (p != NULL) {
+
+        printf("%d", p->n);
+
+        if (p->sibling != NULL)
+
+            printf("-->");
+
+        p = p->sibling;
+
+    }
+
+    printf("\n");
+
+}
+
+ 
+
+void bin_HEAP_EXTRACT_MIN(struct node* H1) {
+
     int min;
-    int temp;
 
-    if(left >= h->count || left <0)
-        left = -1;
-    if(right >= h->count || right <0)
-        right = -1;
+    struct node* t = NULL;
 
-    if(left != -1 && h->data[left] < h->data[parent_node])
-        min=left;
-    else
-        min =parent_node;
-    if(right != -1 && h->data[right] < h->data[min])
-        min = right;
+    struct node* x = H1;
 
-    if(min != parent_node){
-        temp = h->data[min];
-        h->data[min] = h->data[parent_node];
-        h->data[parent_node] = temp;
+    struct node *Hr;
 
-        // appel recurssive
-        entasser_haus_bas(h, min);
+    struct node* p;
+
+    Hr = NULL;
+
+    if (x == NULL) {
+
+        printf("\nLe tas est vide");
+
+        //return x;
+
     }
-}
 
+    //    int min=x->n;
 
+    p = x;
 
-int Extract_Min(tasbinaire_t *h){
-    int pop;
-    if(h->count==0){
-        printf("\n__Tas est vide__\n");
-        return -1;
-    }
-// remplacer le premier node pars le dernier est suprimmer le dernier
-    pop = h->data[0];
-    h->data[0] = h->data[h->count-1];
-    h->count--;
-    entasser_haus_bas(h, 0);
-    return pop;
-}
+    while (p->sibling != NULL) {
 
-void tas_destroy(tasbinaire_t * h){
-  if( h != NULL ){
-    if( h->data != NULL )
-      free( h->data );
-    free( h );
-  }
-}
+        if ((p->sibling)->n < min) {
 
+            min = (p->sibling)->n;
 
+            t = p;
 
-/*void tas_push(tasbinaire_t *h, int valeur)
-{
-	unsigned int i, parent;
+            x = p->sibling;
 
-	if( h->size == h->capacity){
-
-                printf("Erreur: tas plein\n");
-                exit(0);
         }
-  else{
-       	// Trouver ou ajouter l'élément
-	for(i = h->size++; i ; i= parent)
-	{
-                // Parent(i) = (i-1)/2
-                parent = (i - 1)/ 2;
 
-		if COMPARE(h->data[parent], valeur) break; // if( h->data[parent]  <= valeur)
+        p = p->sibling;
 
-		h->data[i] = h->data[parent];
-	}
-	h->data[i] = valeur;
     }
-} 
 
+    if (t == NULL && x->sibling == NULL)
 
-// Supprimer l'élement le plus petit
-void heap_pop(tasbinaire_t * h)
-{
-	unsigned int index, swap, other;
-	int temp = h->data[--h->size];
-	// Reordoner
-	for(index = 0; 1; index = swap)
-	{
+        H1 = NULL;
 
-		swap = (index*2 ) + 1;
-		if (swap >= h->size) break; 
-		other = swap + 1;
-		if ((other < h->size) && COMPARE(h->data[other], h->data[swap])) swap = other;
-		if COMPARE(temp, h->data[swap]) break; 
-		h->data[index] = h->data[swap];
-	}
-	h->data[index] = temp;
+    else if (t == NULL)
+
+        H1 = x->sibling;
+
+    else if (t->sibling == NULL)
+
+        t = NULL;
+
+    else
+
+        t->sibling = x->sibling;
+
+    if (x->child != NULL) {
+
+        REVERT_LIST(x->child);
+
+        (x->child)->sibling = NULL;
+
+    }
+
+    H = bin_HEAP_UNION(H1, Hr);
+
+    //return x;
+
 }
 
-*/
+ 
 
+int REVERT_LIST(struct node* y) {
 
+    if (y->sibling != NULL) {
 
+        REVERT_LIST(y->sibling);
 
+        (y->sibling)->sibling = y;
 
+    } else {
 
+        Hr = y;
+
+    }
+
+}
+
+ 
+
+struct node* FIND_NODE(struct node* H, int k) {
+
+    struct node* x = H;
+
+    struct node* p = NULL;
+
+    if (x->n == k) {
+
+        p = x;
+
+        return p;
+
+    }
+
+    if (x->child != NULL && p == NULL) {
+
+        p = FIND_NODE(x->child, k);
+
+    }
+
+ 
+
+    if (x->sibling != NULL && p == NULL) {
+
+        p = FIND_NODE(x->sibling, k);
+
+    }
+
+    return p;
+
+}
 
 
 

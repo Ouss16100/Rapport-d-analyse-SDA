@@ -1,15 +1,8 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<malloc.h> 
 
 
-
-#include <stddef.h>
-
-
-
-
-
-/**
-tas binomial
-**/
 
 struct node {
 
@@ -23,23 +16,26 @@ struct node {
 
     struct node* sibling;
 
-}node_s;
+    int capacity;
+   
+    int count;
 
-void entasser_bas_haus(tasbinaire_t *h,int index);
-tasbinaire_t * tasbinaire_create();
-void insert(tasbinaire_t *h, int valeur);
-void entasser_haus_bas(tasbinaire_t *h, int parent_node);
-int Extract_Min(tasbinaire_t *h);
-
-
-tasbinaire_t * show( tasbinaire_t *h );
-void tas_destroy(tasbinaire_t * h);
+};
 
 
 
+struct node* MAKE_bin_HEAP();
 
+int bin_LINK(struct node*, struct node*);
 
+struct node* CREATE_NODE(int);
 
+struct node* bin_HEAP_UNION(struct node*, struct node*);
 
+struct node* bin_HEAP_INSERT(struct node*, struct node*);
 
-//void heap_pop(tasbinaire_t * h);
+struct node* bin_HEAP_MERGE(struct node*, struct node*);
+
+void bin_HEAP_EXTRACT_MIN(struct node*);
+
+int REVERT_LIST(struct node* y);
